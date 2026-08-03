@@ -1,0 +1,52 @@
+# Dependencies
+node_modules/
+.pnpm/
+
+# Build outputs
+.next/
+dist/
+build/
+out/
+
+# Environment and config
+.env*
+!.env.example
+
+# Testing and coverage
+coverage/
+.nyc_output/
+
+# Version control
+.git/
+
+# IDE and OS
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+.tmp/
+
+# Minified files
+*.min.js
+*.min.css
+
+# Lock files
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Cache directories
+.cache/
+.parcel-cache/
+
+# shadcn/ui components (external dependencies)
+src/components/ui/

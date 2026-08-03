@@ -1,0 +1,51 @@
+# Dependencies (reinstalled inside container)
+node_modules/
+
+# Next.js build output (rebuilt inside container)
+.next/
+out/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Dev/test files
+vitest.config.ts
+vitest.setup.ts
+biome.json
+
+# Docker files (not needed in build context)
+docker-compose*.yml
+Dockerfile*
+.dockerignore
+
+# Deployment configs
+nixpacks.toml
+
+# Documentation
+*.md
+LICENSE
+
+# Editor configs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Environment files (never send secrets to build context)
+.env*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+
+# TypeScript build cache
+*.tsbuildinfo
+tsconfig.tsbuildinfo

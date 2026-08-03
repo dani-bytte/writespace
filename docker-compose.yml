@@ -1,0 +1,90 @@
+# Production Docker Compose for WriteSpace
+# Use this for running the full application stack in production
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: writespace-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-writespace}
+      POSTGRES_USER: ${POSTGRES_USER:-writespace_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-writespace_user} -d ${POSTGRES_DB:-writespace}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - writespace
+
+  redis:
+    image: redis:7-alpine
+    container_name: writespace-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    networks:
+      - writespace
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # WriteSpace Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: writespace-app
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    environment:
+      # Database
+      DATABASE_URL: postgresql://${POSTGRES_USER:-writespace_user}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/${POSTGRES_DB:-writespace}
+
+      # Better Auth
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL}
+      NEXT_PUBLIC_BETTER_AUTH_URL: ${NEXT_PUBLIC_BETTER_AUTH_URL:-${BETTER_AUTH_URL}}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+
+      # OAuth (optional)
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:-}
+      DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET:-}
+
+      # Next.js
+      NODE_ENV: production
+      NEXT_TELEMETRY_DISABLED: 1
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - writespace
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/ > /dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  writespace:
+    driver: bridge
